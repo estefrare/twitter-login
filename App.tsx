@@ -2,6 +2,33 @@ import React, {useState, useEffect} from 'react';
 import {View, Text, TouchableHighlight} from 'react-native';
 import auth from '@react-native-firebase/auth';
 
+import {NativeModules} from 'react-native';
+const {RNTwitterSignIn} = NativeModules;
+
+RNTwitterSignIn.init(
+  'TWITTER_COMSUMER_KEY',
+  'TWITTER_CONSUMER_SECRET',
+)
+  .then(() => console.log('Twitter SDK initialized'))
+  .catch((error) => console.log(error));
+
+async function onTwitterButtonPress() {
+  console.log("entro")
+  // Perform the login request
+  const {authToken, authTokenSecret} = await RNTwitterSignIn.logIn();
+  console.log({authToken, authTokenSecret})
+
+  // Create a Twitter credential with the tokens
+  const twitterCredential = auth.TwitterAuthProvider.credential(
+    authToken,
+    authTokenSecret,
+  );
+  console.log({twitterCredential})
+
+  // Sign-in the user with the credential
+  return auth().signInWithCredential(twitterCredential);
+}
+
 const App = () => {
   // Set an initializing state whilst Firebase connects
   const [initializing, setInitializing] = useState(true);
@@ -52,6 +79,14 @@ const App = () => {
       <View>
         <TouchableHighlight onPress={login}>
           <Text>Login</Text>
+        </TouchableHighlight>
+        <TouchableHighlight
+          onPress={() =>
+            onTwitterButtonPress()
+              .then(() => console.log('Signed in with Twitter!'))
+              .catch(error => console.log(error))
+          }>
+          <Text>Twitter Sign-In</Text>
         </TouchableHighlight>
       </View>
     );
